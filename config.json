@@ -1,4 +1,5 @@
 {
-  "token": "",
-  "message": "cl"
+  "token": "TOKEN_HERE",
+  "message": "cl",
+  "blacklist": [1234, 5678]
 }
