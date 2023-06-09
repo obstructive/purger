@@ -8,12 +8,10 @@ with open('config.json', 'rb') as f:
 
 log = Logger('purger')
 
-blacklist = config.get('blacklist', [])
 
 bot = discord.Client(
     self_bot=True,
     chunk_guilds_at_startup=False,
-    max_messages=1,
     request_guilds=False,
 )
 
@@ -21,7 +19,6 @@ bot = discord.Client(
 @bot.event
 async def on_ready():
     log.info(f'Online | {bot.user.name}#{bot.user.discriminator} ({bot.user.id})')
-    log.info(f'Blacklist | {len(blacklist)} users/channels') 
 
 @bot.event
 async def on_message(message):
@@ -36,9 +33,6 @@ async def on_message(message):
                     log.success(f'Deleted | {msg.content} ({msg.id}) @ {get_channel_name(msg.channel)} ({msg.channel.id})')
                 except Exception:
                     log.error(f'Failed to delete | {msg.content} ({msg.id}) @ {get_channel_name(msg.channel)} ({msg.channel.id})')
-
-    if message.author.id in blacklist or message.channel.id in blacklist:
-        return
 
     await asyncio.sleep(300)
     try:
