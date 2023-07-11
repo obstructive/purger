@@ -22,7 +22,7 @@ bot = discord.Client(
 
 @bot.event
 async def on_ready():
-    log.info(f'Online | {bot.user.name}#{bot.user.discriminator} ({bot.user.id})')
+    log.info(f'Online | {bot.user.name} ({bot.user.id})')
 
 
 @bot.event
@@ -56,7 +56,7 @@ async def on_message(message):
 
 def get_channel_name(channel):
     if isinstance(channel, discord.DMChannel):
-        return f'{channel.recipient.name}#{channel.recipient.discriminator}'
+        return f'{channel.recipient.name}'
     elif isinstance(channel, (discord.GroupChannel, discord.TextChannel)):
         return channel.name
     else:
