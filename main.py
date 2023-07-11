@@ -1,6 +1,7 @@
 import asyncio
 import discord
 import orjson
+import uvloop
 from helpers.logger import Logger
 
 with open('config.json', 'rb') as f:
@@ -8,17 +9,21 @@ with open('config.json', 'rb') as f:
 
 log = Logger('purger')
 
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+loop = asyncio.get_event_loop()
 
 bot = discord.Client(
     self_bot=True,
     chunk_guilds_at_startup=False,
     request_guilds=False,
+    loop=loop
 )
 
 
 @bot.event
 async def on_ready():
     log.info(f'Online | {bot.user.name}#{bot.user.discriminator} ({bot.user.id})')
+
 
 @bot.event
 async def on_message(message):
@@ -58,4 +63,5 @@ def get_channel_name(channel):
         return 'Unknown'
 
 
-bot.run(config['token'], log_level=None, reconnect=True, log_handler=None)
+if __name__ == '__main__':
+    bot.run(config['token'], log_level=None, reconnect=True, log_handler=None)
