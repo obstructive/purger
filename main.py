@@ -10,13 +10,11 @@ with open('config.json', 'rb') as f:
 log = Logger('purger')
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-loop = asyncio.get_event_loop()
 
 bot = discord.Client(
     self_bot=True,
     chunk_guilds_at_startup=False,
     request_guilds=False,
-    loop=loop
 )
 
 
