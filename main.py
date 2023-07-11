@@ -1,4 +1,5 @@
 import asyncio
+
 import discord
 import orjson
 import uvloop
@@ -12,9 +13,12 @@ logger = Logger('purger')
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
+
 class Purger(discord.Client):
     def __init__(self):
-        super().__init__(chunk_guilds_at_startup=False, request_guilds=False, self_bot=True)
+        super().__init__(
+            chunk_guilds_at_startup=False, request_guilds=False, self_bot=True
+        )
 
     async def on_ready(self):
         logger.info(f'Online | {self.user.name} ({self.user.id})')
@@ -25,24 +29,36 @@ class Purger(discord.Client):
                 if msg.author == self.user:
                     try:
                         await msg.delete()
-                        logger.success(f'Deleted | {msg.content} ({msg.id}) @ {self.get_channel_name(msg.channel)} ({msg.channel.id})')
+                        logger.success(
+                            f'Deleted | {msg.content} ({msg.id}) @ {self.get_channel_name(msg.channel)} ({msg.channel.id})'
+                        )
                     except Exception:
-                        logger.error(f'Failed to delete | {msg.content} ({msg.id}) @ {self.get_channel_name(msg.channel)} ({msg.channel.id})')
+                        logger.error(
+                            f'Failed to delete | {msg.content} ({msg.id}) @ {self.get_channel_name(msg.channel)} ({msg.channel.id})'
+                        )
 
         await asyncio.sleep(300)
 
         try:
             await message.delete()
-            logger.success(f'Deleted | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
+            logger.success(
+                f'Deleted | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})'
+            )
             await asyncio.sleep(5)
         except Exception:
-            logger.error(f'Failed to delete | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
+            logger.error(
+                f'Failed to delete | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})'
+            )
             await asyncio.sleep(10)
             try:
                 await message.delete()
-                logger.success(f'Deleted | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
+                logger.success(
+                    f'Deleted | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})'
+                )
             except Exception:
-                logger.error(f'Failed to delete again | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
+                logger.error(
+                    f'Failed to delete again | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})'
+                )
 
     def get_channel_name(self, channel):
         if isinstance(channel, discord.DMChannel):
@@ -56,11 +72,7 @@ class Purger(discord.Client):
         if message.author == self.user:
             await self.purge_messages(message)
 
+
 if __name__ == '__main__':
     bot = Purger()
-    bot.run(
-        config['token'],
-        log_handler=None,
-        log_level=None,
-        reconnect=True
-    )
+    bot.run(config['token'], log_handler=None, log_level=None, reconnect=True)
