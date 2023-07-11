@@ -2,64 +2,65 @@ import asyncio
 import discord
 import orjson
 import uvloop
+
 from helpers.logger import Logger
 
 with open('config.json', 'rb') as f:
     config = orjson.loads(f.read())
 
-log = Logger('purger')
+logger = Logger('purger')
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-bot = discord.Client(
-    self_bot=True,
-    chunk_guilds_at_startup=False,
-    request_guilds=False,
-)
+class Purger(discord.Client):
+    def __init__(self):
+        super().__init__(chunk_guilds_at_startup=False, request_guilds=False, self_bot=True)
 
+    async def on_ready(self):
+        logger.info(f'Online | {self.user.name} ({self.user.id})')
 
-@bot.event
-async def on_ready():
-    log.info(f'Online | {bot.user.name} ({bot.user.id})')
+    async def purge_messages(self, message):
+        if message.content == config['message']:
+            async for msg in message.channel.history(limit=None):
+                if msg.author == self.user:
+                    try:
+                        await msg.delete()
+                        logger.success(f'Deleted | {msg.content} ({msg.id}) @ {self.get_channel_name(msg.channel)} ({msg.channel.id})')
+                    except Exception:
+                        logger.error(f'Failed to delete | {msg.content} ({msg.id}) @ {self.get_channel_name(msg.channel)} ({msg.channel.id})')
 
+        await asyncio.sleep(300)
 
-@bot.event
-async def on_message(message):
-    if message.author != bot.user:
-        return
-
-    if message.content == config['message']:
-        async for msg in message.channel.history(limit=None):
-            if msg.author == bot.user:
-                try:
-                    await msg.delete()
-                    log.success(f'Deleted | {msg.content} ({msg.id}) @ {get_channel_name(msg.channel)} ({msg.channel.id})')
-                except Exception:
-                    log.error(f'Failed to delete | {msg.content} ({msg.id}) @ {get_channel_name(msg.channel)} ({msg.channel.id})')
-
-    await asyncio.sleep(300)
-    try:
-        await message.delete()
-        log.success(f'Deleted | {message.content} ({message.id}) @ {get_channel_name(message.channel)} ({message.channel.id})')
-        await asyncio.sleep(5)
-    except Exception:
-        log.error(f'Failed to delete | {message.content} ({message.id}) @ {get_channel_name(message.channel)} ({message.channel.id})')
-        await asyncio.sleep(10)
         try:
             await message.delete()
-            log.success(f'Deleted | {message.content} ({message.id}) @ {get_channel_name(message.channel)} ({message.channel.id})')
+            logger.success(f'Deleted | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
+            await asyncio.sleep(5)
         except Exception:
-            log.error(f'Failed to delete again | {message.content} ({message.id}) @ {get_channel_name(message.channel)} ({message.channel.id})')
+            logger.error(f'Failed to delete | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
+            await asyncio.sleep(10)
+            try:
+                await message.delete()
+                logger.success(f'Deleted | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
+            except Exception:
+                logger.error(f'Failed to delete again | {message.content} ({message.id}) @ {self.get_channel_name(message.channel)} ({message.channel.id})')
 
+    def get_channel_name(self, channel):
+        if isinstance(channel, discord.DMChannel):
+            return channel.recipient.name
+        elif isinstance(channel, (discord.GroupChannel, discord.TextChannel)):
+            return channel.name
+        else:
+            return 'Unknown'
 
-def get_channel_name(channel):
-    if isinstance(channel, discord.DMChannel):
-        return f'{channel.recipient.name}'
-    elif isinstance(channel, (discord.GroupChannel, discord.TextChannel)):
-        return channel.name
-    else:
-        return 'Unknown'
-
+    async def on_message(self, message):
+        if message.author == self.user:
+            await self.purge_messages(message)
 
 if __name__ == '__main__':
-    bot.run(config['token'], log_level=None, reconnect=True, log_handler=None)
+    bot = Purger()
+    bot.run(
+        config['token'],
+        log_handler=None,
+        log_level=None,
+        reconnect=True
+    )
